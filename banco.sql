@@ -16,6 +16,17 @@ CREATE TABLE
         locallong float NOT NULL
     );
 
+CREATE TABLE
+    institutes_log (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        coordinator_id INT,
+        operation_type ENUM ('INSERT', 'UPDATE', 'DELETE'),
+        old_data JSON,
+        new_data JSON,
+        changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        changed_by VARCHAR(100)
+    );
+
 /*
  * Tabela: tabela de coordenadores
  * authors: Kevin da Costa Vinagre
@@ -29,6 +40,17 @@ CREATE TABLE
         email VARCHAR(168) NOT NULL,
         pass TEXT NOT NULL,
         status char(1) NOT NULL DEFAULT 'A'
+    );
+
+CREATE TABLE
+    coordinators_log (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        coordinator_id INT,
+        operation_type ENUM ('INSERT', 'UPDATE', 'DELETE'),
+        old_data JSON,
+        new_data JSON,
+        changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        changed_by VARCHAR(100)
     );
 
 CREATE TABLE
@@ -53,6 +75,17 @@ CREATE TABLE
     );
 
 CREATE TABLE
+    events_log (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        coordinator_id INT,
+        operation_type ENUM ('INSERT', 'UPDATE', 'DELETE'),
+        old_data JSON,
+        new_data JSON,
+        changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        changed_by VARCHAR(100)
+    );
+
+CREATE TABLE
     events_institutes (
         id INT PRIMARY KEY AUTO_INCREMENT,
         event_id INT NOT NULL,
@@ -67,6 +100,17 @@ CREATE TABLE
         name VARCHAR(168) NOT NULL,
         description TEXT NOT NULL,
         status char(1) NOT NULL DEFAULT 'A'
+    );
+
+CREATE TABLE
+    projects_log (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        coordinator_id INT,
+        operation_type ENUM ('INSERT', 'UPDATE', 'DELETE'),
+        old_data JSON,
+        new_data JSON,
+        changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        changed_by VARCHAR(100)
     );
 
 CREATE TABLE
@@ -91,3 +135,35 @@ INSERT INTO
 
 INSERT INTO
     coordinators_institutes (coordinator_id, institute_id) VALUE (1, 1);
+
+/*
+ *Procedure Registro de usuario;
+ *author: Kevin da Costa Vinagre
+ *date: 09-03-2026
+ */
+
+DELIMITER $$
+
+create procedure add_institute(
+    IN p_cnpj VARCHAR(168),
+    IN p_name VARCHAR(168),
+    IN p_locallat float,
+    IN p_locallong float
+)
+BEGIN 
+    INSERT INTO institutes (
+        cnpj,
+        name,
+        locallat,
+        locallong
+    )
+    VALUES (
+        p_cnpj,
+        p_name,
+        p_locallat,
+        p_locallong
+    );
+
+END $$ 
+
+DELIMITTER;
