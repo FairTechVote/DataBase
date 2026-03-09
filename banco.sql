@@ -166,4 +166,27 @@ BEGIN
 
 END $$ 
 
-DELIMITTER;
+DELIMITER;
+
+DELIMITER $$
+create procedure add_coordinator(
+    IN p_cpf VARCHAR(11),
+    IN p_name VARCHAR(168),
+    IN p_email VARCHAR(168),
+    IN p_pass TEXT
+)
+BEGIN
+INSERT INTO coordinators (
+    cpf,
+    name,
+    email,
+    pass
+)
+VALUES (
+    p_cpf,
+    p_name,
+    p_email,
+    p_pass
+);
+END $$
+DELIMITER
