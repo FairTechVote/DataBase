@@ -186,7 +186,92 @@ BEGIN
     SELECT coordinator_id_log AS inserted_id;
 END$$
 
-DROP PROCEDURE IF EXISTS add_institute;
+/**
+    Teste de chamada da procedure add_institute;
+    author: Kevin da Costa Vinagre
+    date: 12-03-2026
+*/
+CALL update_institute(
+    1,
+    3,
+    '1230123-2312/1',
+    'FUCAPI',
+    7332.3,
+    54324.5,
+    'Kevin da Costa Vinagre'
+);
+
+/**
+ Procedure que atualiza os dados de um coordenador;
+ autor: Kevin da Costa Vinagre
+ data: 12-03-2026 
+*/
+DELIMITER $$
+
+CREATE PROCEDURE update_institute(
+    IN p_coordinator_id INT,
+    IN p_institute_id   INT,
+    IN p_cnpj           VARCHAR(168),
+    IN p_name           VARCHAR(168),
+    IN p_locallat       FLOAT,
+    IN p_locallong      FLOAT,
+    IN p_changed_by     VARCHAR(100)
+)
+BEGIN
+    DECLARE v_old_data TEXT;
+    DECLARE v_new_data TEXT;
+    
+    IF NOT EXISTS (SELECT 1 FROM institutes WHERE id = p_institute_id) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Instituto não encontrado.';
+    END IF;
+
+    SELECT JSON_OBJECT(
+        'id',        id,
+        'cnpj',      cnpj,
+        'name',      name,
+        'locallat',  locallat,
+        'locallong', locallong
+    )
+    INTO v_old_data
+    FROM institutes
+    WHERE id = p_institute_id;
+
+    UPDATE institutes
+    SET
+        cnpj      = p_cnpj,
+        name      = p_name,
+        locallat  = p_locallat,
+        locallong = p_locallong
+    WHERE id = p_institute_id;
+
+    SET v_new_data = JSON_OBJECT(
+        'id',        p_institute_id,
+        'cnpj',      p_cnpj,
+        'name',      p_name,
+        'locallat',  p_locallat,
+        'locallong', p_locallong
+    );
+
+    INSERT INTO institutes_log (
+        coordinator_id,
+        operation_type,
+        old_data,
+        new_data,
+        changed_by
+    )
+    VALUES (
+        p_coordinator_id,
+        'UPDATE',
+        v_old_data,
+        v_new_data,
+        p_changed_by
+    );
+
+    SELECT ROW_COUNT() AS rows_affected;
+END$$
+
+DELIMITER ;
 
 DELIMITER $$
 create procedure add_coordinator(
