@@ -141,32 +141,52 @@ INSERT INTO
  *author: Kevin da Costa Vinagre
  *date: 09-03-2026
  */
-
 DELIMITER $$
 
-create procedure add_institute(
-    IN p_cnpj VARCHAR(168),
-    IN p_name VARCHAR(168),
-    IN p_locallat float,
-    IN p_locallong float
+CREATE PROCEDURE add_institute(
+    IN p_coordinator_id INT,
+    IN p_cnpj           VARCHAR(168),
+    IN p_name           VARCHAR(168),
+    IN p_locallat       FLOAT,
+    IN p_locallong      FLOAT,
+    IN p_changed_by     VARCHAR(100)
 )
-BEGIN 
-    INSERT INTO institutes (
-        cnpj,
-        name,
-        locallat,
-        locallong
-    )
-    VALUES (
-        p_cnpj,
-        p_name,
-        p_locallat,
-        p_locallong
+BEGIN
+    DECLARE coordinator_id_log INT;
+    DECLARE new_data_log TEXT;
+
+    INSERT INTO institutes (cnpj, name, locallat, locallong)
+    VALUES (p_cnpj, p_name, p_locallat, p_locallong);
+
+    SET coordinator_id_log = LAST_INSERT_ID();
+
+    SET new_data_log = JSON_OBJECT(
+        'id',        coordinator_id_log,
+        'cnpj',      p_cnpj,
+        'name',      p_name,
+        'locallat',  p_locallat,
+        'locallong', p_locallong
     );
 
-END $$ 
+    INSERT INTO institutes_log (
+        coordinator_id,
+        operation_type,
+        old_data,
+        new_data,
+        changed_by
+    )
+    VALUES (
+        p_coordinator_id,
+        'INSERT',
+        NULL,
+        new_data_log,
+        p_changed_by
+    );
 
-DELIMITER;
+    SELECT coordinator_id_log AS inserted_id;
+END$$
+
+DROP PROCEDURE IF EXISTS add_institute;
 
 DELIMITER $$
 create procedure add_coordinator(
@@ -190,3 +210,4 @@ VALUES (
 );
 END $$
 DELIMITER
+
