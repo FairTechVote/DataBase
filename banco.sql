@@ -273,6 +273,26 @@ END$$
 
 DELIMITER ;
 
+/**
+    Trigger para normalizar o campo CNPJ antes de inserir um novo instituto;
+    autor: Kevin da Costa Vinagre
+    data: 12-03-2026 
+*/
+DELIMITER $$
+CREATE TRIGGER trg_institutes_before_insert
+BEFORE INSERT ON institutes
+FOR EACH ROW
+BEGIN
+    SET NEW.cnpj = REGEXP_REPLACE(NEW.cnpj, '[^0-9]', '');
+
+    IF CHAR_LENGTH(NEW.cnpj) != 14 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'CNPJ deve conter 14 dígitos após a remoção de caracteres não numéricos.';
+    END IF;
+END$$
+
+DELIMITER ;
+
 DELIMITER $$
 create procedure add_coordinator(
     IN p_cpf VARCHAR(11),
