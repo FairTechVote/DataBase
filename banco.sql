@@ -285,9 +285,12 @@ FOR EACH ROW
 BEGIN
     SET NEW.cnpj = REGEXP_REPLACE(NEW.cnpj, '[^0-9]', '');
 
+    SAVEPOINT sp_before_insert;
+
     IF CHAR_LENGTH(NEW.cnpj) != 14 THEN
         SIGNAL SQLSTATE '45000'
             SET MESSAGE_TEXT = 'CNPJ deve conter 14 dígitos após a remoção de caracteres não numéricos.';
+            ROLLBACK TO SAVEPOINT sp_before_insert;
     END IF;
 END$$
 
@@ -315,4 +318,37 @@ VALUES (
 );
 END $$
 DELIMITER
+
+/**
+*   Descrição: Schedule para desativar coordenadores inativos por mais de 6 meses;
+*   Autor: Kevin da Costa Vinagre
+*   Data: 17-03-2026
+*/
+DELIMITER $$
+CREATE EVENT ev_inactive_coordinators
+ON SCHEDULE EVERY 1 DAY
+DO
+BEGIN
+    UPDATE coordinators
+    SET status = 'I'
+    WHERE status = 'A' AND last_login < DATE_SUB(NOW(), INTERVAL 6 MONTH);
+END$$
+DELIMITER ;
+
+/**
+* Descrição: evento que inicia automaticamente eventos agendados.
+* Autor: Kevin da Costa Vinagre
+* Data: 17-03-2026
+*/
+DELIMITER $$
+CREATE EVENT ev_start_scheduled_events
+ON SCHEDULE EVERY 6 MINUTE
+DO
+BEGIN
+    UPDATE events
+    SET status = 'E'
+    WHERE status = 'A'
+      AND CONCAT(start_date, ' 09:00:00') <= NOW();
+END$$
+DELIMITER ;
 
